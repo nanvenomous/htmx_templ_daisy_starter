@@ -80,8 +80,18 @@ func Setup(mux *http.ServeMux) error {
 			errorOut(w, stts, err)
 		}
 	})
-	return nil
 
+	mux.HandleFunc("/table", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			GetTable(w, r)
+			break
+		default:
+			errorOut(w, models.StatusMethodNotAllowed, err)
+		}
+	})
+
+	return nil
 }
 
 func getBundledFile(r *http.Request) ([]byte, error) {

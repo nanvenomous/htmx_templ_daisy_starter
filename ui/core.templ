@@ -35,6 +35,7 @@ templ headers() {
 		<link rel={ lk.Rel } href={ lk.Href }/>
 	}
 	<script src="/index.js"></script>
+	@templ.JSFuncCall("applySavedTheme")
 	<title>Starter</title>
 }
 
@@ -76,47 +77,53 @@ templ icon(id, css string) {
 	></i>
 }
 
+templ tooltip(label, targetID, triggerID, css string) {
+	<div class={ "tooltip", css } data-tip={ label }>
+		{ children... }
+	</div>
+}
+
 templ themeController() {
-	<div>
+	<li class="flex items-center p-2 rounded-lg group btn-ghost">
 		<label class="swap swap-rotate">
 			<!-- this hidden checkbox controls the state -->
-			<input id="theme-toggle" type="checkbox" class="theme-controller" onchange="persistTheme(this)" value="aqua"/>
+			<input id={ "theme-toggle" } type="checkbox" class="theme-controller" onchange="persistTheme(this)" value="aqua"/>
 			<!-- sun icon -->
 			@icon("", "ph-sun text-2xl swap-off")
 			<!-- moon icon -->
 			@icon("", "ph-moon text-2xl swap-on")
 		</label>
-		<script>
-		// Initialize theme from local storage when page loads
-		document.addEventListener('DOMContentLoaded', function() {
-			const savedTheme = localStorage.getItem('theme');
-      console.log("the saved theme was", savedTheme)
-			const themeToggle = document.getElementById('theme-toggle');
-			
-      document.documentElement.setAttribute('data-theme', savedTheme);
-			if (savedTheme === 'aqua') {
-				themeToggle.checked = true;
-			} else {
-				themeToggle.checked = false;
-			}
-		});
+	</li>
+}
 
-		// Function to save theme to local storage when changed
-		function persistTheme(checkbox) {
-			const theme = checkbox.checked ? 'aqua' : 'corporate';
-			localStorage.setItem('theme', theme);
-			document.documentElement.setAttribute('data-theme', theme);
-		}
-	</script>
-	</div>
+templ sideBarItem(id, name, icn string, rt string) {
+	@tooltip(name, "", "", "tooltip-bottom") {
+		<li
+			id={ id }
+			if rt != "" {
+				hx-get={ rt + "?partial=true" }
+				hx-swap="innerHTML"
+				hx-target="#sidebarContent"
+				hx-push-url={ rt }
+			}
+			class={ "flex items-center p-2 rounded-lg group btn-ghost", }
+		>
+			@icon("", icn+" text-2xl")
+		</li>
+	}
+}
+
+templ divider() {
+	<div class="divider divider-horizontal"></div>
 }
 
 templ navSideBarItems() {
-	<li><a>Navbar Item 1</a></li>
-	<li><a>Navbar Item 2</a></li>
-	<li>
+	@sideBarItem("homeSidebarItem", "home", "ph-house", "/")
+	@sideBarItem("tableSidebarItem", "table page", "ph-table", "/table")
+	@divider()
+	@tooltip("change theme", "", "", "tooltip-bottom") {
 		@themeController()
-	</li>
+	}
 }
 
 templ navSideBar() {
@@ -138,11 +145,13 @@ templ navSideBar() {
 					</ul>
 				</div>
 			</div>
-			{ children... }
+			<div id="sidebarContent" class="w-full h-full">
+				{ children... }
+			</div>
 		</div>
 		<div class="drawer-side">
 			<label for="my-drawer-3" aria-label="close sidebar" class="drawer-overlay"></label>
-			<ul class="menu bg-base-200 min-h-full w-80 p-4">
+			<ul class="menu bg-base-200 min-h-full p-4">
 				<!-- Sidebar content here -->
 				@navSideBarItems()
 			</ul>
@@ -206,6 +215,48 @@ templ alert(label string, typ AlertType, baseID string) {
 			6,
 		)
 	</div>
+}
+
+templ thead() {
+}
+
+templ tr() {
+	<tr class="hover:bg-base-300">
+		{ children... }
+	</tr>
+}
+
+templ table() {
+	<table class="table table-zebra">
+		<thead>
+			<tr>
+				<th></th>
+				<th>Name</th>
+				<th>Job</th>
+				<th>Favorite Color</th>
+			</tr>
+		</thead>
+		<tbody>
+			@tr() {
+				<th>1</th>
+				<td>Cy Ganderton</td>
+				<td>Quality Control Specialist</td>
+				<td>Blue</td>
+			}
+			@tr() {
+				<th>2</th>
+				<td>Hart Hagerty</td>
+				<td>Desktop Support Technician</td>
+				<td>Purple</td>
+			}
+			@tr() {
+				<th>3</th>
+				<td>Brice Swyre</td>
+				<td>Tax Accountant</td>
+				<td>Red</td>
+			}
+		</tbody>
+	</table>
 }
 
 templ progress() {
