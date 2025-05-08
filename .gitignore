@@ -1,0 +1,6 @@
+starter
+node_modules
+bun.lock
+bun.lockb
+*_templ.go
+tmp

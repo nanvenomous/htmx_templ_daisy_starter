@@ -1,0 +1,22 @@
+{
+  "name": "htmx_templ_daisy_starter",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "tw": "bun run tailwindcss -i ./input.css -o ./handle/build/css/tailwind-generated.min.css",
+    "js": "bun build index.ts --outdir ./handle/build --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.5",
+    "@types/bun": "latest",
+    "daisyui": "^5.0.35",
+    "tailwindcss": "^4.1.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "htmx.org": "^1.9.12"
+  }
+}

@@ -1,0 +1,223 @@
+package ui
+
+import gonanoid "github.com/matoous/go-nanoid/v2"
+
+type headerLink struct {
+	Rel, Href string
+}
+
+// Multi sends multiple templ components one after the other
+// extra useful for htmx out of band swaps
+templ Multi(chn ...templ.Component) {
+	for _, chd := range chn {
+		@chd
+	}
+}
+
+templ Empty() {
+	<div></div>
+}
+
+var (
+	headerLinks = []headerLink{
+		{Rel: "manifest", Href: "/manifest.json"},
+		{Rel: "stylesheet", Href: "/icons/light/style.css"},
+		{Rel: "stylesheet", Href: "/css/tailwind-generated.min.css"},
+		// {Rel: "icon", Href: ""},
+		// {Rel: "apple-touch-icon", Href: ""},
+	}
+)
+
+templ headers() {
+	<meta charset="utf-8"/>
+	<meta name="description" content="starter for true server side rendering using htmx templ daisyui"/>
+	for _, lk := range headerLinks {
+		<link rel={ lk.Rel } href={ lk.Href }/>
+	}
+	<script src="/index.js"></script>
+	<title>Starter</title>
+}
+
+templ EmptyModalPopover() {
+	<div
+		id="modal"
+		class="absolute top-0 w-full z-30 pointer-events-none"
+	></div>
+}
+
+templ popovers() {
+	<div
+		id="toastContainer"
+		class="absolute top-0 left-0 right-0 flex flex-col justify-start items-center z-50 pointer-events-none"
+	></div>
+	@EmptyModalPopover()
+}
+
+templ Page() {
+	<head>
+		@headers()
+	</head>
+	<body id={ "body" } class="absolute top-0 bottom-0 left-0 right-0 bg-base">
+		@popovers()
+		@navSideBar() {
+			<div id={ "appContent" } class="w-full h-full">
+				{ children... }
+			</div>
+		}
+	</body>
+}
+
+templ icon(id, css string) {
+	<i
+		if id != "" {
+			id={ id }
+		}
+		class={ "ph-light ", css }
+	></i>
+}
+
+templ themeController() {
+	<div>
+		<label class="swap swap-rotate">
+			<!-- this hidden checkbox controls the state -->
+			<input id="theme-toggle" type="checkbox" class="theme-controller" onchange="persistTheme(this)" value="aqua"/>
+			<!-- sun icon -->
+			@icon("", "ph-sun text-2xl swap-off")
+			<!-- moon icon -->
+			@icon("", "ph-moon text-2xl swap-on")
+		</label>
+		<script>
+		// Initialize theme from local storage when page loads
+		document.addEventListener('DOMContentLoaded', function() {
+			const savedTheme = localStorage.getItem('theme');
+      console.log("the saved theme was", savedTheme)
+			const themeToggle = document.getElementById('theme-toggle');
+			
+      document.documentElement.setAttribute('data-theme', savedTheme);
+			if (savedTheme === 'aqua') {
+				themeToggle.checked = true;
+			} else {
+				themeToggle.checked = false;
+			}
+		});
+
+		// Function to save theme to local storage when changed
+		function persistTheme(checkbox) {
+			const theme = checkbox.checked ? 'aqua' : 'corporate';
+			localStorage.setItem('theme', theme);
+			document.documentElement.setAttribute('data-theme', theme);
+		}
+	</script>
+	</div>
+}
+
+templ navSideBarItems() {
+	<li><a>Navbar Item 1</a></li>
+	<li><a>Navbar Item 2</a></li>
+	<li>
+		@themeController()
+	</li>
+}
+
+templ navSideBar() {
+	<div class="drawer w-full h-full">
+		<input id="my-drawer-3" type="checkbox" class="drawer-toggle"/>
+		<div class="drawer-content flex flex-col">
+			<!-- Navbar -->
+			<div class="navbar bg-base-300 w-full">
+				<div class="flex-none lg:hidden">
+					<label for="my-drawer-3" aria-label="open sidebar" class="btn btn-square btn-ghost">
+						@icon("", "ph-list text-3xl")
+					</label>
+				</div>
+				<div class="mx-2 flex-1 px-2">Starter</div>
+				<div class="hidden flex-none lg:block">
+					<ul class="menu menu-horizontal">
+						<!-- Navbar menu content here -->
+						@navSideBarItems()
+					</ul>
+				</div>
+			</div>
+			{ children... }
+		</div>
+		<div class="drawer-side">
+			<label for="my-drawer-3" aria-label="close sidebar" class="drawer-overlay"></label>
+			<ul class="menu bg-base-200 min-h-full w-80 p-4">
+				<!-- Sidebar content here -->
+				@navSideBarItems()
+			</ul>
+		</div>
+	</div>
+}
+
+type AlertType string
+
+const (
+	AlertTypeInfo    AlertType = "alert-info"
+	AlertTypeSuccess AlertType = "alert-success"
+	AlertTypeWarning AlertType = "alert-warning"
+	AlertTypeError   AlertType = "alert-error"
+)
+
+type PropsAlert struct {
+	Label string
+	Type  AlertType
+	id    string
+}
+
+func alertID() string {
+	id, err := gonanoid.New()
+	if err != nil {
+		return "toastID"
+	}
+	return id
+}
+
+var (
+	cssToastIcon = map[AlertType]string{
+		AlertTypeInfo:    "ph-info",
+		AlertTypeSuccess: "ph-check-circle",
+		AlertTypeWarning: "ph-warning",
+		AlertTypeError:   "ph-warning-circle",
+	}
+)
+
+templ Alert(props PropsAlert) {
+	@alert(props.Label, props.Type, alertID())
+}
+
+templ alert(label string, typ AlertType, baseID string) {
+	<div hx-swap-oob="beforeend:#toastContainer">
+		<div
+			id={ "toastNotif_" + baseID }
+			role="alert"
+			class={ "alert mt-4 pointer-events-auto alert-info", typ }
+		>
+			@icon("", "text-xl "+cssToastIcon[typ])
+			<span>{ label }</span>
+			<button id={ "toastDismissBtn_" + baseID } class="btn btn-ghost btn-square cursor-pointer h-6 w-6">
+				@icon("", "ph-x text-xl")
+			</button>
+		</div>
+		@templ.JSFuncCall(
+			"dismissToast",
+			"toastNotif_"+baseID,
+			"toastDismissBtn_"+baseID,
+			6,
+		)
+	</div>
+}
+
+templ progress() {
+	<div class="w-full flex flex-col items-center justify-center">
+		<progress id="progress-indicator" class="progress w-full h-1 htmx-indicator"></progress>
+	</div>
+}
+
+type PropsButton struct {
+	ID, Label, Type, CSS string
+}
+
+templ Button(props PropsButton) {
+	<button id={ props.ID } type={ props.Type } class={ "btn", props.CSS }>{ props.Label }</button>
+}

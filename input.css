@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@import "tailwindcss" source("./ui");
+@plugin "daisyui" {
+  themes: corporate --default, aqua;
+  root: ":root";
+  include: ;
+  exclude: ;
+  prefix: ;
+  logs: true;
+}
+
+.htmx-request .HideOnRequest {
+  display: none;
+}

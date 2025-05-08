@@ -1,0 +1,21 @@
+package ui
+
+templ Home() {
+	@Page() {
+		<form
+			hx-post={ "/homeButton" }
+			hx-indicator={ "#progress-indicator" }
+			hx-swap="outerHTML"
+			hx-target="#seeToastButton"
+			hx-disabled-elt="find button"
+			class="w-full h-full flex flex-col items-center justify-start"
+		>
+			@progress()
+			<div class="w-full h-full flex items-center justify-center">
+				<div>
+					@Button(PropsButton{ID: "seeToastButton", Label: "PressMe", Type: "submit", CSS: "btn-primary"})
+				</div>
+			</div>
+		</form>
+	}
+}
