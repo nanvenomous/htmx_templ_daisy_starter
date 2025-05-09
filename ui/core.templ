@@ -1,6 +1,19 @@
 package ui
 
+import "fmt"
+import "math/rand"
+
 import gonanoid "github.com/matoous/go-nanoid/v2"
+
+func nanoID() string {
+	id, err := gonanoid.New()
+	if err != nil {
+		min, max := 1, 9999999
+		return fmt.Sprintf("%d", rand.Intn(max-min+1)+min)
+	}
+	return id
+}
+
 
 type headerLink struct {
 	Rel, Href string
@@ -168,22 +181,15 @@ const (
 	AlertTypeError   AlertType = "alert-error"
 )
 
-type PropsAlert struct {
-	Label string
-	Type  AlertType
-	id    string
-}
-
-func alertID() string {
-	id, err := gonanoid.New()
-	if err != nil {
-		return "toastID"
-	}
-	return id
-}
-
 var (
-	cssToastIcon = map[AlertType]string{
+	cssAlert = map[AlertType]string{
+		AlertTypeInfo:    "alert-info",
+		AlertTypeSuccess: "alert-success",
+		AlertTypeWarning: "alert-warning",
+		AlertTypeError:   "alert-error",
+	}
+
+	cssAlertIcon = map[AlertType]string{
 		AlertTypeInfo:    "ph-info",
 		AlertTypeSuccess: "ph-check-circle",
 		AlertTypeWarning: "ph-warning",
@@ -191,8 +197,13 @@ var (
 	}
 )
 
+type PropsAlert struct {
+	Label string
+	Type  AlertType
+}
+
 templ Alert(props PropsAlert) {
-	@alert(props.Label, props.Type, alertID())
+	@alert(props.Label, props.Type, nanoID())
 }
 
 templ alert(label string, typ AlertType, baseID string) {
@@ -200,9 +211,9 @@ templ alert(label string, typ AlertType, baseID string) {
 		<div
 			id={ "toastNotif_" + baseID }
 			role="alert"
-			class={ "alert mt-4 pointer-events-auto alert-info", typ }
+			class={ "alert", cssAlert[typ], "mt-4 pointer-events-auto" }
 		>
-			@icon("", "text-xl "+cssToastIcon[typ])
+			@icon("", "text-xl "+cssAlertIcon[typ])
 			<span>{ label }</span>
 			<button id={ "toastDismissBtn_" + baseID } class="btn btn-ghost btn-square cursor-pointer h-6 w-6">
 				@icon("", "ph-x text-xl")
